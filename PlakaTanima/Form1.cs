@@ -7,11 +7,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using openalprnet;
-
 //bu proje openALPR kütüphanesi kullanarak yapılmıştır
 //https://github.com/openalpr
 //Berk Pekatik 20161132079
-
 namespace PlakaTanima
 {
     public partial class Form1 : Form
@@ -107,7 +105,7 @@ namespace PlakaTanima
 
         private void processImageFile(string fileName)
         {
-            sifirla();
+            resetControls();
             var region = "eu";
             String config_file = Path.Combine(AssemblyDirectory, "openalpr.conf");
             String runtime_data_dir = Path.Combine(AssemblyDirectory, "runtime_data");
@@ -115,11 +113,11 @@ namespace PlakaTanima
             {
                 if (!alpr.IsLoaded())
                 {
-                    plakaYaz.Text = ("Error initializing OpenALPR");
+                    plakaText.Items.Add("Error initializing OpenALPR");
                     return;
                 }
-                aracFoto.ImageLocation = fileName;
-                aracFoto.Load();
+                aracPic.ImageLocation = fileName;
+                aracPic.Load();
 
                 var results = alpr.Recognize(fileName);
 
@@ -133,28 +131,38 @@ namespace PlakaTanima
                     images.Add(cropped);
                     string[] plakaList = result.TopNPlates.Select(x => x.Characters).ToArray();
                     plakaYaz.Text = plakaList[0].ToString();
+
+                    plakaText.Items.Add("\t\t-- Plate #" + i++ + " --");
+                    foreach (var plate in result.TopNPlates)
+                    {
+                        
+                        plakaText.Items.Add(string.Format(@"{0} {1}% {2}",
+                                                          plate.Characters.PadRight(12),
+                                                          plate.OverallConfidence.ToString("N1").PadLeft(8),
+                                                          plate.MatchesTemplate.ToString().PadLeft(8)));
+                    }
                 }
 
                 if (images.Any())
                 {
-                    aracPlaka.Image = combineImages(images);
+                    plakaResim.Image = combineImages(images);
                 }
             }
         }
 
-        private void sifirla()
+        private void resetControls()
         {
-            aracFoto.Image = null;
-            aracPlaka.Image = null;
-            plakaYaz.Text = null;
+            aracPic.Image = null;
+            plakaResim.Image = null;
+            plakaText.Items.Clear();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            sifirla();
+            resetControls();
         }
 
-        private void plakaBul_Click(object sender, EventArgs e)
+        private void btnDetect_Click(object sender, EventArgs e)
         {
             if (openFileDialog.ShowDialog(this) == DialogResult.OK)
             {
@@ -162,5 +170,19 @@ namespace PlakaTanima
             }
         }
 
+        private void rbUSA_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_Load_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
